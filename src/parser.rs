@@ -3,6 +3,7 @@ use std::sync::OnceLock;
 
 pub static DATA: OnceLock<Root> = OnceLock::new();
 
+// TODO: switch this from runtime to compile time next
 pub fn get_data() -> &'static Root {
     DATA.get_or_init(|| {
         serde_json::from_str(include_str!("../jsons/wmn-data.json"))
