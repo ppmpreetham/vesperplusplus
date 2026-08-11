@@ -33,16 +33,18 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
 
     let req = match &site.post_body {
         // POST
-        Some(s) => {
-            let body = s.replace("{account}", &username);
-            client.post(url).body(body)
-        }
+        Some(s) => client.post(url).body(s.replace("{account}", &username)),
         // GET
         None => client.get(url),
     };
 
     let resp = req.headers(headers).send().await?;
     let status = resp.status();
+
+    if status != site.e_code && status != site.m_code {
+        return Ok(FetchRes::Unknown);
+    }
+
     let body = resp.text().await?;
 
     let result: FetchRes = if status == site.e_code && body.contains(&site.e_string) {
