@@ -2,20 +2,32 @@ use crate::parser::get_data;
 use crate::searcher::FetchRes;
 use crate::searcher::fetch_url;
 use reqwest::Client;
+use std::sync::Arc;
+use std::time::Duration;
 use std::time::Instant;
+use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 
 // fucking goes to every fucking website and fucking runs the fucking check function
 pub async fn fetch() {
     let start = Instant::now();
-
-    let mut set = JoinSet::new();
     let data = get_data();
-    let client = Client::new();
+    let client = Client::builder()
+        .timeout(Duration::from_secs(15))
+        .hickory_dns(true)
+        .build()
+        .expect("Can't build a HTTP client");
+
+    let sem = Arc::new(Semaphore::new(200));
+    let mut set = JoinSet::new();
 
     for site in &data.sites {
         let worker = client.clone();
-        set.spawn(async move { fetch_url(worker, site).await });
+        let permit = sem.clone();
+        set.spawn(async move {
+            let _permit = permit.acquire_owned().await.unwrap();
+            fetch_url(worker, site).await
+        });
     }
 
     let mut success: u32 = 0;
@@ -25,6 +37,5 @@ pub async fn fetch() {
         }
     }
 
-    let time_taken = start.elapsed();
-    println!("About {} results ({:?})", success, time_taken);
+    println!("About {} results ({:?})", success, start.elapsed());
 }
