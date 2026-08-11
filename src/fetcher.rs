@@ -1,5 +1,6 @@
 use crate::parser::get_data;
 use crate::searcher::fetch_url;
+use reqwest::Client;
 use std::time::Instant;
 use tokio::task::JoinSet;
 
@@ -9,11 +10,13 @@ async fn fetch() {
 
     let mut set = JoinSet::new();
     let data = get_data();
+    let client = Client::new();
 
     data.sites.iter().for_each(|site| {
+        let worker = client.clone();
         set.spawn(async move {
             // TODO: do things with the res
-            fetch_url(site).await;
+            fetch_url(worker, site).await;
         });
     });
 

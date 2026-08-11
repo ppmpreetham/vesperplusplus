@@ -15,7 +15,7 @@ pub struct Response {
 }
 
 // fucking checks the fucking html if fucking found or not
-pub async fn fetch_url(site: &'static Site) -> Result<Response> {
+pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<Response> {
     // strip naughty characters
     let username = match &site.strip_bad_char {
         Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
@@ -23,16 +23,22 @@ pub async fn fetch_url(site: &'static Site) -> Result<Response> {
     };
 
     // meowtube.com/ -> meowtube.com/danny
-    let url = site.uri_check.replace("{account}", USERNAME).trim();
+    let url = site.uri_check.replace("{account}", USERNAME);
+    let url = url.trim();
 
-    let headers = &site.headers;
+    let headers = headers_maker(&site);
 
-    if let Some(ref s) = site.post_body {
+    let req = match &site.post_body {
         // POST
-        let body = s.replace("{account}", &username);
-    } else {
+        Some(s) => {
+            let body = s.replace("{account}", &username);
+            client.post(url).body(body)
+        }
         // GET
-    }
+        None => client.get(url),
+    };
+
+    let resp = req.headers(headers).send().await?;
 
     todo!()
 }
