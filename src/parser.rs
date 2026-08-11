@@ -5,7 +5,7 @@ static DATA: OnceLock<Root> = OnceLock::new();
 
 pub fn get_data() -> &'static Root {
     DATA.get_or_init(|| {
-        serde_json::from_str(include_str!("../wmn-data.json"))
+        serde_json::from_str(include_str!("../jsons/wmn-data.json"))
             .expect("can't parse the whatsmyname json...")
     })
 }
