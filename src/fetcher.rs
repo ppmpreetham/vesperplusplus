@@ -1,4 +1,5 @@
 use crate::parser::get_data;
+use crate::searcher::FetchRes;
 use crate::searcher::fetch_url;
 use reqwest::Client;
 use std::time::Instant;
@@ -12,13 +13,18 @@ pub async fn fetch() {
     let data = get_data();
     let client = Client::new();
 
-    data.sites.iter().for_each(|site| {
+    for site in &data.sites {
         let worker = client.clone();
-        set.spawn(async move {
-            // TODO: do things with the res
-            fetch_url(worker, site).await;
-        });
-    });
+        set.spawn(async move { fetch_url(worker, site).await });
+    }
 
-    let end = start.elapsed();
+    let mut success: u32 = 0;
+    while let Some(res) = set.join_next().await {
+        if let Ok(Ok(FetchRes::Found)) = res {
+            success += 1;
+        }
+    }
+
+    let time_taken = start.elapsed();
+    println!("About {} results ({:?})", success, time_taken);
 }
