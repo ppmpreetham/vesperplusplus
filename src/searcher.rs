@@ -10,6 +10,7 @@ use std::borrow::Cow;
 // TODO: set up cli for this later using clap
 static USERNAME: &str = "danny";
 
+#[derive(PartialEq)]
 pub enum FetchRes {
     Found,
     NotFound,
@@ -51,7 +52,23 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
     } else {
         FetchRes::Unknown
     };
+
+    if result == FetchRes::Found {
+        pprint(site, url, &username)
+    }
+
     Ok(result)
+}
+
+// fucking prints the fucking links in a pretty way
+fn pprint(site: &Site, url: &str, username: &str) {
+    let final_url = site
+        .uri_pretty
+        .as_ref()
+        .map(|text| text.replace("{account}", username))
+        .unwrap_or_else(|| url.to_string());
+
+    println!("{}: {}", site.name, final_url);
 }
 
 // TODO: make this compile time later instead of building the headermap every single time
