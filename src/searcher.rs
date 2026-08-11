@@ -2,7 +2,7 @@ use anyhow::Result;
 use reqwest::StatusCode;
 use std::{borrow::Cow, time::Duration};
 
-use crate::parser::{Headers, Site};
+use crate::parser::Site;
 
 // TODO: set up cli for this later using clap
 static USERNAME: &str = "preetham";
@@ -17,7 +17,7 @@ pub struct Response {
 // fucking checks the fucking html if fucking found or not
 pub async fn fetch_url(site: &'static Site) -> Result<Response> {
     // strip naughty characters
-    let username: Cow<'_, str> = match &site.strip_bad_char {
+    let username = match &site.strip_bad_char {
         Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
         _ => Cow::Borrowed(USERNAME),
     };
@@ -25,7 +25,8 @@ pub async fn fetch_url(site: &'static Site) -> Result<Response> {
     // meowtube.com/ -> meowtube.com/danny
     let url = site.uri_check.replace("{account}", USERNAME).trim();
 
-    // req headers cuz fucking browser mf don't wanna think we're botz
+    let headers = &site.headers;
+
     if let Some(ref s) = site.post_body {
         // POST
         let body = s.replace("{account}", &username);
@@ -34,4 +35,45 @@ pub async fn fetch_url(site: &'static Site) -> Result<Response> {
     }
 
     todo!()
+}
+
+use reqwest::header::{
+    ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL, CONTENT_TYPE, COOKIE, HOST, HeaderMap, HeaderName,
+    HeaderValue, ORIGIN, REFERER, USER_AGENT,
+};
+
+// TODO: make this compile time later instead of building the headermap every single time
+// req headers cuz fucking browser mf don't wanna think we're botz
+fn headers_maker(site: &'static Site) -> HeaderMap {
+    let mut final_headers = HeaderMap::new();
+
+    if let Some(headers) = &site.headers {
+        let pairs = [
+            (USER_AGENT, &headers.user_agent),
+            (ACCEPT_LANGUAGE, &headers.accept_language),
+            (CONTENT_TYPE, &headers.content_type),
+            (CONTENT_TYPE, &headers.content_type2),
+            (COOKIE, &headers.cookie),
+            (ACCEPT, &headers.accept),
+            (ACCEPT, &headers.accept2),
+            (CACHE_CONTROL, &headers.cache_control),
+            (HOST, &headers.host),
+            (ORIGIN, &headers.origin),
+            (REFERER, &headers.referer),
+            (HeaderName::from_static("x-tool"), &headers.x_tool),
+            (
+                HeaderName::from_static("x-vt-anti-abuse-header"),
+                &headers.x_vt_anti_abuse_header,
+            ),
+            (HeaderName::from_static("te"), &headers.te),
+        ];
+
+        final_headers.extend(pairs.into_iter().filter_map(|(name, val_opt)| {
+            let val = val_opt.as_ref()?;
+            let h_val = HeaderValue::from_str(val).ok()?;
+            Some((name, h_val))
+        }));
+    }
+
+    final_headers
 }

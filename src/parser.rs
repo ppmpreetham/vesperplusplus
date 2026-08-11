@@ -67,9 +67,6 @@ pub struct Headers {
     #[serde(rename = "User-Agent")]
     pub user_agent: Option<String>,
 
-    #[serde(rename = "Accept-Ianguage")]
-    pub accept_ianguage: Option<String>,
-
     #[serde(rename = "X-Tool")]
     pub x_tool: Option<String>,
 
