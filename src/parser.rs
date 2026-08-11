@@ -1,7 +1,7 @@
 use serde_derive::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
-static DATA: OnceLock<Root> = OnceLock::new();
+pub static DATA: OnceLock<Root> = OnceLock::new();
 
 pub fn get_data() -> &'static Root {
     DATA.get_or_init(|| {

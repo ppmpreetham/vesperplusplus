@@ -1,15 +1,17 @@
-// fucking checks the fucking html if fucking found or not
 use anyhow::Result;
 use reqwest::StatusCode;
 use std::time::Duration;
 
+use crate::parser::Site;
+
 #[derive(Debug)]
-struct Response {
+pub struct Response {
     url: String,
     status: StatusCode,
     time_it_took: Duration,
 }
 
-async fn fetch_url(url: &str) -> Result<Response> {
+// fucking checks the fucking html if fucking found or not
+pub async fn fetch_url(site: &'static Site) -> Result<Response> {
     todo!()
 }
