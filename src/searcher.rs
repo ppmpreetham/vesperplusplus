@@ -1,6 +1,8 @@
 use crate::parser::Site;
 
 use anyhow::Result;
+use bstr::ByteSlice;
+use futures_util::StreamExt;
 use reqwest::header::{
     ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL, CONTENT_TYPE, COOKIE, HOST, HeaderMap, HeaderName,
     HeaderValue, ORIGIN, REFERER, USER_AGENT,
@@ -47,15 +49,30 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
         return Ok(FetchRes::Unknown);
     }
 
-    let body = resp.text().await?;
+    let mut stream = resp.bytes_stream();
+    let mut buffer: Vec<u8> = Vec::new();
+    const KEEP_TAIL: usize = 4096;
 
-    let result: FetchRes = if status == site.e_code && body.contains(&site.e_string) {
-        FetchRes::Found
-    } else if status == site.m_code && body.contains(&site.m_string) {
-        FetchRes::NotFound
-    } else {
-        FetchRes::Unknown
-    };
+    let mut result = FetchRes::Unknown;
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        buffer.extend_from_slice(chunk.as_ref());
+
+        if status == site.e_code && buffer.contains_str(&site.e_string) {
+            result = FetchRes::Found;
+            break;
+        }
+        if status == site.m_code && buffer.contains_str(&site.m_string) {
+            result = FetchRes::NotFound;
+            break;
+        }
+
+        if buffer.len() > KEEP_TAIL * 2 {
+            let excess = buffer.len() - KEEP_TAIL;
+            buffer.drain(0..excess);
+        }
+    }
 
     if result == FetchRes::Found {
         let final_url = site

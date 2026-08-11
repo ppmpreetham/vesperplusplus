@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aho-corasick = "1.1.5"
 anyhow = "1.0.104"
-reqwest = {version="0.13.4", features = ["hickory-dns", "gzip", "brotli", "deflate"]}
+bstr = "1.13.1"
+futures-util = "0.3.34"
+reqwest = {version="0.13.4", features = ["hickory-dns", "gzip", "brotli", "deflate", "stream"]}
 serde = "1.0.229"
 serde_derive = "1.0.229"
 serde_json = "1.0.151"
