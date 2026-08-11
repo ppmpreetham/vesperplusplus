@@ -1,21 +1,23 @@
-use anyhow::Result;
-use reqwest::StatusCode;
-use std::{borrow::Cow, time::Duration};
-
 use crate::parser::Site;
 
-// TODO: set up cli for this later using clap
-static USERNAME: &str = "preetham";
+use anyhow::Result;
+use reqwest::header::{
+    ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL, CONTENT_TYPE, COOKIE, HOST, HeaderMap, HeaderName,
+    HeaderValue, ORIGIN, REFERER, USER_AGENT,
+};
+use std::borrow::Cow;
 
-#[derive(Debug)]
-pub struct Response {
-    url: String,
-    status: StatusCode,
-    time_it_took: Duration,
+// TODO: set up cli for this later using clap
+static USERNAME: &str = "danny";
+
+pub enum FetchRes {
+    Found,
+    NotFound,
+    Unknown,
 }
 
 // fucking checks the fucking html if fucking found or not
-pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<Response> {
+pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<FetchRes> {
     // strip naughty characters
     let username = match &site.strip_bad_char {
         Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
@@ -23,10 +25,10 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<R
     };
 
     // meowtube.com/ -> meowtube.com/danny
-    let url = site.uri_check.replace("{account}", USERNAME);
+    let url = site.uri_check.replace("{account}", &username);
     let url = url.trim();
 
-    let headers = headers_maker(&site);
+    let headers = headers_maker(site);
 
     let req = match &site.post_body {
         // POST
@@ -39,14 +41,18 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<R
     };
 
     let resp = req.headers(headers).send().await?;
+    let status = resp.status();
+    let body = resp.text().await?;
 
-    todo!()
+    let result: FetchRes = if status == site.e_code && body.contains(&site.e_string) {
+        FetchRes::Found
+    } else if status == site.m_code && body.contains(&site.m_string) {
+        FetchRes::NotFound
+    } else {
+        FetchRes::Unknown
+    };
+    Ok(result)
 }
-
-use reqwest::header::{
-    ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL, CONTENT_TYPE, COOKIE, HOST, HeaderMap, HeaderName,
-    HeaderValue, ORIGIN, REFERER, USER_AGENT,
-};
 
 // TODO: make this compile time later instead of building the headermap every single time
 // req headers cuz fucking browser mf don't wanna think we're botz

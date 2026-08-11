@@ -29,7 +29,7 @@ pub struct Site {
     pub uri_check: String,
 
     #[serde(rename = "e_code")]
-    pub e_code: i64,
+    pub e_code: u16,
 
     #[serde(rename = "e_string")]
     pub e_string: String,
@@ -38,7 +38,7 @@ pub struct Site {
     pub m_string: String,
 
     #[serde(rename = "m_code")]
-    pub m_code: i64,
+    pub m_code: u16,
 
     pub known: Vec<String>,
 
