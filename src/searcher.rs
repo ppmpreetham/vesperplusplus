@@ -16,10 +16,12 @@ pub enum FetchRes {
     NotFound,
     Unknown,
 }
+use tokio::time::Instant;
 
 // fucking checks the fucking html if fucking found or not
 pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<FetchRes> {
     // strip naughty characters
+    let start = Instant::now();
     let username = match &site.strip_bad_char {
         Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
         _ => Cow::Borrowed(USERNAME),
@@ -56,21 +58,16 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
     };
 
     if result == FetchRes::Found {
-        pprint(site, url, &username)
+        let final_url = site
+            .uri_pretty
+            .as_ref()
+            .map(|text| text.replace("{account}", &username))
+            .unwrap_or_else(|| url.to_string());
+
+        println!("{}: {}, {:?}", site.name, final_url, start.elapsed());
     }
 
     Ok(result)
-}
-
-// fucking prints the fucking links in a pretty way
-fn pprint(site: &Site, url: &str, username: &str) {
-    let final_url = site
-        .uri_pretty
-        .as_ref()
-        .map(|text| text.replace("{account}", username))
-        .unwrap_or_else(|| url.to_string());
-
-    println!("{}: {}", site.name, final_url);
 }
 
 // TODO: make this compile time later instead of building the headermap every single time
