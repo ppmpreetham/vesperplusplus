@@ -5,7 +5,7 @@ use std::time::Instant;
 use tokio::task::JoinSet;
 
 // fucking goes to every fucking website and fucking runs the fucking check function
-async fn fetch() {
+pub async fn fetch() {
     let start = Instant::now();
 
     let mut set = JoinSet::new();

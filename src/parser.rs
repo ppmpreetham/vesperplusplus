@@ -11,6 +11,7 @@ pub fn get_data() -> &'static Root {
     })
 }
 
+// generated using https://transform.tools/json-to-rust-serde
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {

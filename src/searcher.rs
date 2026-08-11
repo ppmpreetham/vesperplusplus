@@ -72,6 +72,7 @@ fn headers_maker(site: &'static Site) -> HeaderMap {
             (HOST, &headers.host),
             (ORIGIN, &headers.origin),
             (REFERER, &headers.referer),
+            // the below fuckers are everywhere
             (HeaderName::from_static("x-tool"), &headers.x_tool),
             (
                 HeaderName::from_static("x-vt-anti-abuse-header"),
@@ -80,8 +81,8 @@ fn headers_maker(site: &'static Site) -> HeaderMap {
             (HeaderName::from_static("te"), &headers.te),
         ];
 
-        final_headers.extend(pairs.into_iter().filter_map(|(name, val_opt)| {
-            let val = val_opt.as_ref()?;
+        final_headers.extend(pairs.into_iter().filter_map(|(name, v)| {
+            let val = v.as_ref()?;
             let h_val = HeaderValue::from_str(val).ok()?;
             Some((name, h_val))
         }));

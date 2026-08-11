@@ -1,7 +1,10 @@
+use crate::fetcher::fetch;
+
 mod fetcher;
 pub mod parser;
 mod searcher;
 
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() {
+    fetch().await;
 }
