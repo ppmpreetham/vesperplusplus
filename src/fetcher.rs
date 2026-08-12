@@ -1,6 +1,7 @@
 use crate::parser::get_data;
 use crate::searcher::FetchRes;
 use crate::searcher::fetch_url;
+use kdam::{BarExt, tqdm};
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
@@ -20,6 +21,7 @@ pub async fn fetch() {
 
     let sem = Arc::new(Semaphore::new(200));
     let mut set = JoinSet::new();
+    let mut pb = tqdm!(total = data.sites.len());
 
     for site in &data.sites {
         let worker = client.clone();
@@ -32,10 +34,17 @@ pub async fn fetch() {
 
     let mut success: u32 = 0;
     while let Some(res) = set.join_next().await {
-        if let Ok(Ok(FetchRes::Found)) = res {
-            success += 1;
+        match res {
+            Ok(Ok(FetchRes::Found { name, url, elapsed })) => {
+                success += 1;
+                pb.write(format!("{}: {}, {:?}", name, url, elapsed));
+            }
+            _ => {}
         }
+        pb.update(1);
     }
+    pb.refresh();
+    eprintln!();
 
     println!("About {} results ({:?})", success, start.elapsed());
 }

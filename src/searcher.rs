@@ -7,23 +7,29 @@ use reqwest::header::{
     ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL, CONTENT_TYPE, COOKIE, HOST, HeaderMap, HeaderName,
     HeaderValue, ORIGIN, REFERER, USER_AGENT,
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, time::Duration};
 
 // TODO: set up cli for this later using clap
 static USERNAME: &str = "danny";
 
 #[derive(PartialEq)]
 pub enum FetchRes {
-    Found,
+    Found {
+        name: String,
+        url: String,
+        elapsed: Duration,
+    },
     NotFound,
     Unknown,
 }
 use tokio::time::Instant;
 
 // fucking checks the fucking html if fucking found or not
+#[inline(always)]
 pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<FetchRes> {
-    // strip naughty characters
     let start = Instant::now();
+
+    // strip naughty characters
     let username = match &site.strip_bad_char {
         Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
         _ => Cow::Borrowed(USERNAME),
@@ -51,44 +57,50 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
 
     let mut stream = resp.bytes_stream();
     let mut buffer: Vec<u8> = Vec::new();
-    const KEEP_TAIL: usize = 4096;
 
-    let mut result = FetchRes::Unknown;
+    let pattern = if status == site.e_code {
+        &site.e_string
+    } else {
+        &site.m_string
+    };
+
+    let keep_tail: usize = pattern.len().saturating_sub(1);
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk?;
         buffer.extend_from_slice(chunk.as_ref());
 
         if status == site.e_code && buffer.contains_str(&site.e_string) {
-            result = FetchRes::Found;
-            break;
-        }
-        if status == site.m_code && buffer.contains_str(&site.m_string) {
-            result = FetchRes::NotFound;
-            break;
+            // prettify the fucking url, instead of scummy api req, ppl wud be mad
+            let final_url = site
+                .uri_pretty
+                .as_ref()
+                .map(|text| text.replace("{account}", &username))
+                .unwrap_or_else(|| url.to_string());
+
+            return Ok(FetchRes::Found {
+                name: site.name.clone(),
+                url: final_url,
+                elapsed: start.elapsed(),
+            });
         }
 
-        if buffer.len() > KEEP_TAIL * 2 {
-            let excess = buffer.len() - KEEP_TAIL;
+        if status == site.m_code && buffer.contains_str(&site.m_string) {
+            return Ok(FetchRes::NotFound);
+        }
+
+        if buffer.len() > keep_tail * 2 {
+            let excess = buffer.len() - keep_tail;
             buffer.drain(0..excess);
         }
     }
 
-    if result == FetchRes::Found {
-        let final_url = site
-            .uri_pretty
-            .as_ref()
-            .map(|text| text.replace("{account}", &username))
-            .unwrap_or_else(|| url.to_string());
-
-        println!("{}: {}, {:?}", site.name, final_url, start.elapsed());
-    }
-
-    Ok(result)
+    Ok(FetchRes::Unknown)
 }
 
 // TODO: make this compile time later instead of building the headermap every single time
 // req headers cuz fucking browser mf don't wanna think we're botz
+#[inline(always)]
 fn headers_maker(site: &'static Site) -> HeaderMap {
     let mut final_headers = HeaderMap::new();
 
