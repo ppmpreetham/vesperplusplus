@@ -9,7 +9,7 @@ use std::time::Instant;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 
-// fucking goes to every fucking website and fucking runs the fucking check function
+// fucking goes to every fucking website and fucking checks if the user fucking exists
 pub async fn fetch() {
     let start = Instant::now();
     let data = get_data();
@@ -41,7 +41,6 @@ pub async fn fetch() {
         let _ = pb.update(1);
     }
     let _ = pb.refresh();
-    eprintln!();
-
+    println!();
     println!("About {} results ({:?})", success, start.elapsed());
 }

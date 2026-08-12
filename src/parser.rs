@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 pub static DATA: OnceLock<Root> = OnceLock::new();
 
 // TODO: switch this from runtime to compile time next
-// /// # Panics
+/// # Panics
 ///
 /// Panics if `wmn-data.json` cant be parsed.
 pub fn get_data() -> &'static Root {
