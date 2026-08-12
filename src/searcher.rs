@@ -72,7 +72,7 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
 
         if status == site.e_code && buffer.contains_str(&site.e_string) {
             // prettify the fucking url, instead of scummy api req, ppl wud be mad
-            let final_url = site.uri_pretty.as_ref().as_ref().map_or_else(
+            let final_url = site.uri_pretty.as_ref().map_or_else(
                 || url.to_string(),
                 |text| text.replace("{account}", &username),
             );
