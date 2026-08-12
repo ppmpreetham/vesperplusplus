@@ -1,9 +1,10 @@
 # Vesper ++
 
-[Vesper](https://www.github.com/ppmpreetham/vesper) but faster?
+[Vesper](https://www.github.com/ppmpreetham/vesper) but faster, written for speed.
+![Vesper Logo](readme/logo.png)
 
-> [!NOTE]  
-> Still experimental
+> [!WARNING]  
+> This tool is intended for educational purposes only. Use responsibly and ethically. The author is not responsible for any misuse or illegal activities.
 
 ### Perf patches
 
