@@ -34,16 +34,13 @@ pub async fn fetch() {
 
     let mut success: u32 = 0;
     while let Some(res) = set.join_next().await {
-        match res {
-            Ok(Ok(FetchRes::Found { name, url, elapsed })) => {
-                success += 1;
-                pb.write(format!("{}: {}, {:?}", name, url, elapsed));
-            }
-            _ => {}
+        if let Ok(Ok(FetchRes::Found { name, url, elapsed })) = res {
+            success += 1;
+            let _ = pb.write(format!("{name}: {url}, {elapsed:?}"));
         }
-        pb.update(1);
+        let _ = pb.update(1);
     }
-    pb.refresh();
+    let _ = pb.refresh();
     eprintln!();
 
     println!("About {} results ({:?})", success, start.elapsed());

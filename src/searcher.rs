@@ -41,12 +41,12 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
 
     let headers = headers_maker(site);
 
-    let req = match &site.post_body {
-        // POST
-        Some(s) => client.post(url).body(s.replace("{account}", &username)),
+    let req = site.post_body.as_ref().map_or_else(
         // GET
-        None => client.get(url),
-    };
+        || client.get(url),
+        // POST
+        |s| client.post(url).body(s.replace("{account}", &username)),
+    );
 
     let resp = req.headers(headers).send().await?;
     let status = resp.status();
@@ -72,11 +72,10 @@ pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<F
 
         if status == site.e_code && buffer.contains_str(&site.e_string) {
             // prettify the fucking url, instead of scummy api req, ppl wud be mad
-            let final_url = site
-                .uri_pretty
-                .as_ref()
-                .map(|text| text.replace("{account}", &username))
-                .unwrap_or_else(|| url.to_string());
+            let final_url = site.uri_pretty.as_ref().as_ref().map_or_else(
+                || url.to_string(),
+                |text| text.replace("{account}", &username),
+            );
 
             return Ok(FetchRes::Found {
                 name: site.name.clone(),
