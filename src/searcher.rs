@@ -26,7 +26,7 @@ use tokio::time::Instant;
 pub async fn fetch_url(
     client: reqwest::Client,
     site: &'static Site,
-    username: &'static str,
+    username: &str,
 ) -> Result<FetchRes> {
     let start = Instant::now();
 

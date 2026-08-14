@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use crate::api::server::serve_api;
-use crate::{config::init_config, fetcher::fetch};
+use crate::config::get_username;
+use crate::{config::init_config, fetcher::fetch_cli};
 use clap::{Args, Parser, ValueEnum};
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -57,7 +60,7 @@ pub async fn run() {
         }
         (false, Some(user)) => {
             init_config(user);
-            fetch().await;
+            fetch_cli().await;
         }
         _ => unreachable!(),
     }
