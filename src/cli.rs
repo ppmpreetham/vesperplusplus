@@ -1,7 +1,4 @@
-use std::sync::Arc;
-
 use crate::api::server::serve_api;
-use crate::config::get_username;
 use crate::{config::init_config, fetcher::fetch_cli};
 use clap::{Args, Parser, ValueEnum};
 
@@ -37,7 +34,7 @@ struct Cli {
     // TODO
     /// Optional AI results
     #[arg(long, value_enum)]
-    ai: OutputFormat,
+    ai: Option<String>,
 }
 
 #[derive(Args, Debug)]
