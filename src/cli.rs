@@ -1,3 +1,4 @@
+use crate::api::server::serve_api;
 use crate::{config::init_config, fetcher::fetch};
 use clap::{Args, Parser, ValueEnum};
 
@@ -15,6 +16,10 @@ pub enum OutputFormat {
 struct Cli {
     #[command(flatten)]
     mode: Mode,
+
+    /// Port for the server (only valid with --api)
+    #[arg(short, long, requires = "api")]
+    port: Option<u16>,
 
     // TODO
     /// Filter by site type (e.g., photo,~dating)
@@ -48,7 +53,7 @@ pub async fn run() {
 
     match (cli.mode.api, cli.mode.username) {
         (true, _) => {
-            api(&cli.filter, cli.format);
+            serve_api(cli.port).await;
         }
         (false, Some(user)) => {
             init_config(user);
@@ -56,8 +61,4 @@ pub async fn run() {
         }
         _ => unreachable!(),
     }
-}
-
-fn api(filters: &[String], format: OutputFormat) {
-    todo!()
 }

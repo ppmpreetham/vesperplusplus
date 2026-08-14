@@ -1,5 +1,6 @@
 use crate::cli::run;
 
+mod api;
 mod cli;
 mod config;
 mod fetcher;
