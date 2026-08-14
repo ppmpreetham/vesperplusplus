@@ -17,7 +17,7 @@ struct Cli {
     #[command(flatten)]
     mode: Mode,
 
-    /// Port for the server (only valid with --api)
+    /// Port for the api (only works with --api)
     #[arg(short, long, requires = "api")]
     port: Option<u16>,
 
