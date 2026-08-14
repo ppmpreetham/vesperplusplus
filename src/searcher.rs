@@ -9,9 +9,6 @@ use reqwest::header::{
 };
 use std::{borrow::Cow, time::Duration};
 
-// TODO: set up cli for this later using clap
-static USERNAME: &str = "danny";
-
 #[derive(PartialEq)]
 pub enum FetchRes {
     Found {
@@ -26,13 +23,17 @@ use tokio::time::Instant;
 
 // fucking checks the fucking html if fucking found or not
 #[inline(always)]
-pub async fn fetch_url(client: reqwest::Client, site: &'static Site) -> Result<FetchRes> {
+pub async fn fetch_url(
+    client: reqwest::Client,
+    site: &'static Site,
+    username: &'static str,
+) -> Result<FetchRes> {
     let start = Instant::now();
 
     // strip naughty characters
     let username = match &site.strip_bad_char {
-        Some(naughty) if USERNAME.contains(naughty) => Cow::Owned(USERNAME.replace(naughty, "")),
-        _ => Cow::Borrowed(USERNAME),
+        Some(naughty) if username.contains(naughty) => Cow::Owned(username.replace(naughty, "")),
+        _ => Cow::Borrowed(username),
     };
 
     // meowtube.com/ -> meowtube.com/danny

@@ -1,3 +1,4 @@
+use crate::config::get_username;
 use crate::parser::get_data;
 use crate::searcher::FetchRes;
 use crate::searcher::fetch_url;
@@ -13,6 +14,7 @@ use tokio::task::JoinSet;
 pub async fn fetch() {
     let start = Instant::now();
     let data = get_data();
+
     let client = Client::builder()
         .timeout(Duration::from_secs(15))
         .hickory_dns(true)
@@ -23,12 +25,14 @@ pub async fn fetch() {
     let mut set = JoinSet::new();
     let mut pb = tqdm!(total = data.sites.len());
 
+    let username: &'static str = get_username();
+
     for site in &data.sites {
         let worker = client.clone();
         let permit = sem.clone();
         set.spawn(async move {
             let _permit = permit.acquire_owned().await.unwrap();
-            fetch_url(worker, site).await
+            fetch_url(worker, site, username).await
         });
     }
 
