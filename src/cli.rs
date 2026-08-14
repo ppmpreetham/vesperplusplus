@@ -16,13 +16,20 @@ struct Cli {
     #[command(flatten)]
     mode: Mode,
 
+    // TODO
     /// Filter by site type (e.g., photo,~dating)
     #[arg(long, value_delimiter = ',')]
     filter: Vec<String>,
 
+    // TODO
     /// Output a Prettified Document
     #[arg(short = 'o', long = "output", value_enum, default_value_t = OutputFormat::Txt)]
     format: OutputFormat,
+
+    // TODO
+    /// Optional AI results
+    #[arg(long, value_enum)]
+    ai: OutputFormat,
 }
 
 #[derive(Args, Debug)]
